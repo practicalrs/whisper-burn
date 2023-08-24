@@ -1,7 +1,7 @@
 use std::result;
 use serde::ser::StdError;
 
-use tokenizers::{Tokenizer, AddedToken};
+use tokenizers::{AddedToken};
 
 pub type Result<T> = result::Result<T, Box<(dyn StdError + Send + Sync + 'static)>>;
 

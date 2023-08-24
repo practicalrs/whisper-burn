@@ -1,9 +1,9 @@
-use std::collections::HashMap;
-use std::iter;
+
+
 
 use whisper::model::*;
-use whisper::helper::*;
-use whisper::token;
+
+
 use whisper::transcribe::waveform_to_text;
 
 use burn_wgpu::{WgpuBackend, WgpuDevice, AutoGraphicsApi};
@@ -12,25 +12,20 @@ use burn::{
     config::Config, 
     module::Module, 
     tensor::{
-        self, 
-        backend::{self, Backend},
-        Data, 
-        Tensor,
-        Int, 
-        Float, 
+        backend::{Backend}, 
     },
 };
 
 use hound::{self, SampleFormat};
 
 fn load_audio_waveform<B: Backend>(filename: &str) -> hound::Result<(Vec<f32>, usize)> {
-    let mut reader = hound::WavReader::open(filename)?;
+    let reader = hound::WavReader::open(filename)?;
     let spec = reader.spec();
 
-    let duration = reader.duration() as usize;
-    let channels = spec.channels as usize;
+    let _duration = reader.duration() as usize;
+    let _channels = spec.channels as usize;
     let sample_rate = spec.sample_rate as usize;
-    let bits_per_sample = spec.bits_per_sample;
+    let _bits_per_sample = spec.bits_per_sample;
     let sample_format = spec.sample_format;
 
     let max_int_val = 2_u32.pow(spec.bits_per_sample as u32 - 1) - 1;
@@ -48,9 +43,9 @@ fn load_audio_waveform<B: Backend>(filename: &str) -> hound::Result<(Vec<f32>, u
     return Ok( (floats, sample_rate) );
 }
 
-use num_traits::ToPrimitive;
-use whisper::audio::prep_audio;
-use whisper::token::{Gpt2Tokenizer, SpecialToken};
+
+
+use whisper::token::{Gpt2Tokenizer};
 
 use burn::record::{Recorder, DefaultRecorder, RecorderError};
 
@@ -112,7 +107,7 @@ fn main() {
     
     let whisper = whisper.to_device(&device);
 
-    let (text, tokens) = match waveform_to_text(&whisper, &bpe, waveform, sample_rate) {
+    let (text, _tokens) = match waveform_to_text(&whisper, &bpe, waveform, sample_rate) {
         Ok( (text, tokens) ) => (text, tokens), 
         Err(e) => {
             eprintln!("Error during transcription: {}", e);

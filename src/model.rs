@@ -3,7 +3,7 @@ use std::f32::NEG_INFINITY;
 use burn::{
     config::Config, 
     module::{Module, Param},
-    nn::{self, conv::{Conv1d, Conv1dConfig, Conv1dRecord}, PaddingConfig1d},
+    nn::{self, conv::{Conv1d, Conv1dConfig}, PaddingConfig1d},
     tensor::{
         backend::Backend,
         activation::softmax, 
@@ -117,7 +117,7 @@ pub struct TextDecoder<B: Backend> {
 
 impl<B: Backend> TextDecoder<B> {
     fn forward(&self, x: Tensor<B, 2, Int>, xa: Tensor<B, 3>) -> Tensor<B, 3> {
-        let [n_batch, seq_len] = x.dims();
+        let [_n_batch, seq_len] = x.dims();
 
         assert!(seq_len <= self.n_text_ctx, "Token sequence length {} must not exceed {}.", seq_len, self.n_text_ctx);
 

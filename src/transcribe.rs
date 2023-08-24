@@ -1,20 +1,17 @@
 use crate::model::*;
-use crate::helper::*;
+
 use crate::token::{self, *};
 use crate::audio::{prep_audio, max_waveform_samples};
 
 use num_traits::ToPrimitive;
 
 use burn::{
-    config::Config, 
     module::Module, 
     tensor::{
         self, 
-        backend::{self, Backend},
+        backend::{Backend},
         Data, 
-        Tensor,
-        Int, 
-        Float, 
+        Tensor, 
     },
 };
 
@@ -35,7 +32,7 @@ pub fn waveform_to_text<B: Backend>(whisper: &Whisper<B>, bpe: &Gpt2Tokenizer, w
         prev_normal_tokens.reverse();
         //println!("Prev tokens: {:?} {}", prev_normal_tokens, bpe.decode(&prev_normal_tokens[..], false)?);
 
-        let (new_text, new_tokens) = mels_to_text(whisper, bpe, mel, &prev_normal_tokens[..], padding)?;
+        let (_new_text, new_tokens) = mels_to_text(whisper, bpe, mel, &prev_normal_tokens[..], padding)?;
 
         if let Some( (prev_index, curr_index) ) = find_chunk_overlap(&tokens[..], &new_tokens[..], 40, 3) {
             tokens.truncate(prev_index);
@@ -110,13 +107,13 @@ fn waveform_to_mel_tensor<B: Backend>(waveform: Vec<f32>, sample_rate: usize, wi
     })
 }
 
-fn mels_to_text<B: Backend>(whisper: &Whisper<B>, bpe: &Gpt2Tokenizer, mels: Tensor<B, 3>, prev_normal_tokens: &[usize], padding: usize) -> token::Result<(String, Vec<usize>)> {
+fn mels_to_text<B: Backend>(whisper: &Whisper<B>, bpe: &Gpt2Tokenizer, mels: Tensor<B, 3>, _prev_normal_tokens: &[usize], padding: usize) -> token::Result<(String, Vec<usize>)> {
     let device = mels.device();
 
     let n_ctx_max_encoder = whisper.encoder_ctx_size();
     let n_ctx_max_decoder = whisper.decoder_ctx_size();
 
-    let [n_channel, n_mel, n_ctx] = mels.dims();
+    let [_n_channel, n_mel, n_ctx] = mels.dims();
     if n_ctx + padding > n_ctx_max_encoder {
         println!("Audio has length of {} which exceeds maximum length {}. It will be clipped.", n_ctx + padding, n_ctx_max_encoder);
     }
@@ -127,7 +124,7 @@ fn mels_to_text<B: Backend>(whisper: &Whisper<B>, bpe: &Gpt2Tokenizer, mels: Ten
 
     let start_token = bpe.special_token(SpecialToken::StartofTranscript).unwrap();
     let transcription_token = bpe.special_token(SpecialToken::Transcribe).unwrap();
-    let start_of_prev_token = bpe.special_token(SpecialToken::StartofPrev).unwrap();
+    let _start_of_prev_token = bpe.special_token(SpecialToken::StartofPrev).unwrap();
     let first_timestamp_token = bpe.special_token(SpecialToken::Timestamp(0.0)).unwrap();
     let end_token = bpe.special_token(SpecialToken::EndofText).unwrap();
 
@@ -155,7 +152,7 @@ fn mels_to_text<B: Backend>(whisper: &Whisper<B>, bpe: &Gpt2Tokenizer, mels: Ten
 
         let out = whisper.forward_decoder(token_tensor, encoder_output.clone());
 
-        let [n_batch, n_token, n_dict] = out.dims();
+        let [_n_batch, n_token, _n_dict] = out.dims();
         let last_row: Tensor<B, 1> = out.slice([0..1, (n_token - 1)..n_token]).flatten(0, 2);
 
         let token_id = last_row.clone().argmax(0).into_scalar().to_usize().unwrap();
